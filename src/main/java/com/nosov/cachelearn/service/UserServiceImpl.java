@@ -2,14 +2,15 @@ package com.nosov.cachelearn.service;
 
 import com.nosov.cachelearn.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.nosov.cachelearn.domain.User;
 
 import java.util.List;
 
-@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -25,26 +26,30 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users", key = "#user.name")
     public User createOrReturnCached(User user) {
-        log.info("creating user: {}", user);
+        System.err.println("creating user: " + create(user));
         return repository.save(user);
     }
 
     @Override
+    @CachePut(value = "users", key = "#user.name")
     public User createAndRefreshCache(User user) {
-        log.info("creating user: {}", user);
+        System.err.println("creating user: " + create(user));
         return repository.save(user);
     }
 
     @Override
+    @Cacheable(value = "users", key="#name")
     public User create(String name, String email) {
-        log.info("creating user with parameters: {}, {}", name, email);
+        System.err.println("creating user with parameters: " + name + email);
         return repository.save(new User(name, email));
     }
 
     @Override
+    @Cacheable("users")
     public User get(Long id) {
-        log.info("getting user by id: {}", id);
+        System.err.println("getting user by id: " + id);
         return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found by id" + id));
     }
@@ -56,13 +61,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void delete(Long id) {
-        log.info("deleting user by id: {}", id);
+        System.err.println("deleting user by id: {}" + id);
         repository.deleteById(id);
     }
 
     @Override
+    @CacheEvict("users")
     public void deleteAndEvict(Long id) {
-        log.info("deleting user by id: {}", id);
+        System.err.println("deleting and evicting user by id: {}" + id);
         repository.deleteById(id);
     }
 }
